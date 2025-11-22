@@ -95,6 +95,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 				details: dbError.details,
 				hint: dbError.hint,
 				code: dbError.code,
+				user_id: user.id,
+				post_id: postId,
 			});
 			
 			// Provide more helpful error messages
@@ -102,12 +104,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			if (dbError.code === 'PGRST116') {
 				errorMessage = 'Comments table not found. Please run database migrations.';
 			} else if (dbError.code === '42501') {
-				errorMessage = 'Permission denied. Please check Row Level Security policies.';
+				errorMessage = 'Permission denied. Please check Row Level Security policies. Make sure the RLS policy allows authenticated users to insert comments.';
 			} else if (dbError.message) {
 				errorMessage = `Failed to save comment: ${dbError.message}`;
 			}
 			
-			return res.status(500).json({ error: errorMessage });
+			return res.status(500).json({ 
+				error: errorMessage,
+				details: process.env.NODE_ENV === 'development' ? dbError : undefined
+			});
 		}
 
 		// Sync to Hashnode in the background (don't wait for it)

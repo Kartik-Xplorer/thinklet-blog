@@ -41,6 +41,8 @@ export const createServerSupabaseClient = () => {
 
 // Server-side Supabase client with user authentication token
 // This ensures RLS policies can identify the user via auth.uid()
+// The Authorization header in the global config allows Supabase to decode the JWT
+// and use it for RLS policy evaluation
 export const createAuthenticatedServerSupabaseClient = (accessToken: string) => {
 	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -49,6 +51,8 @@ export const createAuthenticatedServerSupabaseClient = (accessToken: string) => 
 		throw new Error('Missing Supabase environment variables');
 	}
 
+	// Create client with Authorization header in global config
+	// This allows Supabase to decode the JWT and use auth.uid() in RLS policies
 	const client = createClient(supabaseUrl, supabaseAnonKey, {
 		global: {
 			headers: {
