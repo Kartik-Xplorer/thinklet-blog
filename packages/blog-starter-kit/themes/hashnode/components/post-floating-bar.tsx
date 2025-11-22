@@ -8,6 +8,7 @@ import PostFloatingBarTooltipWrapper from './post-floating-bar-tooltip-wrapper';
 import { PostFullFragment } from '../generated/graphql';
 import TocSheet from './toc-sheet';
 import PostShareWidget from './post-share-widget';
+import { PostLikeButton } from './post-like-button';
 
 
 function PostFloatingMenu(props: {
@@ -126,6 +127,17 @@ function PostFloatingMenu(props: {
           </PostFloatingBarTooltipWrapper>
 
           <Separator className="mx-2 h-5" />
+
+          {post && (
+            <>
+              <PostLikeButton 
+                postId={post.id} 
+                hashnodePostId={post.id}
+                initialLikeCount={post.reactionCount || 0}
+              />
+              <Separator className="mx-2 h-5" />
+            </>
+          )}
 
           {post && post.features.tableOfContents.isEnabled && (
             <>

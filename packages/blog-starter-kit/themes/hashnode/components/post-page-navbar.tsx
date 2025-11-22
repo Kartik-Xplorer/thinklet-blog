@@ -36,7 +36,7 @@ const PostPageNavbar = forwardRef<HTMLElement, Props>((props, ref) => {
 							aria-label="Back to blog home"
 							className={twJoin('blog-back-to-home-button', commonIconBtnStyles, 'p-2')}
 						>
-							<ChevronLeftSVG className="h-4 w-4 fill-current" />
+							<ChevronLeftSVG className="h-4 w-4 fill-current text-slate-800 dark:text-white" />
 						</Link>
 					</HeaderTooltip>
 					<HeaderLeftSidebar publication={publication} />
@@ -57,7 +57,7 @@ const PostPageNavbar = forwardRef<HTMLElement, Props>((props, ref) => {
 							aria-label="Back to blog home"
 							className={twJoin('blog-back-to-home-button', commonIconBtnStyles, 'p-2')}
 						>
-							<ChevronLeftSVG className="h-4 w-4 fill-current" />
+							<ChevronLeftSVG className="h-4 w-4 fill-current text-slate-800 dark:text-white" />
 						</Link>
 					</HeaderTooltip>
 					<PublicationLogo publication={publication} size="lg" withProfileImage isPostPage />

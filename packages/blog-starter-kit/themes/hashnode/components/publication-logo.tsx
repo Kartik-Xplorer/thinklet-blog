@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { twJoin } from 'tailwind-merge';
 import { Maybe, Preferences, PublicationFragment, User } from '../generated/graphql';
 import { generateBlogTitleWithoutDisplayTitle } from '../utils/commonUtils';
@@ -126,13 +127,38 @@ const DefaultLogo = ({
 function PublicationLogo(props: PublicationLogoProps) {
 	const { publication, size, withProfileImage, isPostPage } = props;
 	const { preferences } = publication;
+	const [isDarkMode, setIsDarkMode] = useState(false);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		// Check if dark mode is active
+		const checkDarkMode = () => {
+			const dark = document.documentElement.classList.contains('dark');
+			setIsDarkMode(dark);
+		};
+		
+		checkDarkMode();
+		
+		// Watch for theme changes
+		const observer = new MutationObserver(checkDarkMode);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+		
+		return () => observer.disconnect();
+	}, []);
 
 	if (!publication) {
 		return null;
 	}
-	const useLogo = false || preferences.logo;
+	const useLogo = preferences.logo;
 	if (useLogo) {
-		const logoSrc = false ? preferences.darkMode?.logo : preferences.logo;
+		// Use dark mode logo if available and dark mode is active
+		const logoSrc = mounted && isDarkMode && preferences.darkMode?.logo 
+			? preferences.darkMode.logo 
+			: preferences.logo;
 		return (
 			<CustomLogo publication={publication} logoSrc={logoSrc} size={size} isPostPage={isPostPage} />
 		);
