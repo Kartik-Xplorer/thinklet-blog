@@ -25,10 +25,10 @@ const textStyles = {
 } as const;
 
 const logoSizes = {
-	xs: 'w-44',
-	sm: 'w-44',
-	lg: 'w-64',
-	xl: 'w-64',
+	xs: 'w-32',
+	sm: 'w-36',
+	lg: 'w-48',
+	xl: 'w-52',
 } as const;
 
 const CustomLogo = ({

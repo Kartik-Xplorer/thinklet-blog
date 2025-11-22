@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="100%" height="100%" viewBox="0 0 919 252" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <defs>
+        <style type="text/css">
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap');
+        </style>
+    </defs>
     <g transform="matrix(1,0,0,1,-570.243818,-874.057793)">
         <g transform="matrix(0.557941,0,0,0.538415,174.830788,471.376152)">
             <path d="M1165.636,830.94L1165.636,1132.689C1165.636,1178.519 1129.73,1215.727 1085.504,1215.727L788.833,1215.727C744.606,1215.727 708.7,1178.519 708.7,1132.689L708.7,830.94C708.7,785.11 744.606,747.902 788.833,747.902L1085.504,747.902C1129.73,747.902 1165.636,785.11 1165.636,830.94ZM1021.496,840.032C983.416,840.032 952.499,872.07 952.499,911.532C952.499,950.994 983.416,983.031 1021.496,983.031C1059.577,983.031 1090.494,950.994 1090.494,911.532C1090.494,872.07 1059.577,840.032 1021.496,840.032Z" style="fill:white;"/>
@@ -8,7 +13,7 @@
         <g transform="matrix(0.25521,0,0,0.25521,639.997899,724.352353)">
             <g transform="matrix(571.424104,0,0,571.424104,3348.10099,1292.935776)">
             </g>
-            <text x="904.12px" y="1292.936px" style="font-family:'PlusJakartaText-Bold', 'Plus Jakarta Text';font-weight:700;font-size:571.424px;fill:white;">ThinkLet</text>
+            <text x="904.12px" y="1292.936px" style="font-family:'Plus Jakarta Sans', 'Plus_Jakarta_Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-weight:700;font-size:571.424px;fill:white;">ThinkLet</text>
         </g>
     </g>
 </svg>

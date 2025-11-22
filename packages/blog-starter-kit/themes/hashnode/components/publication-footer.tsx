@@ -69,7 +69,7 @@ function PublicationFooter(props: any) {
 				{/* Logo */}
 				{logoSrc && (
 					<div className="mb-8 flex flex-col items-center">
-						<Link href="/" className="block w-auto max-w-xs">
+						<Link href="/" className="block w-auto max-w-[200px]">
 							{mounted && logoSrc.includes('/assets/ThinkLet') ? (
 								<CustomImage
 									priority
