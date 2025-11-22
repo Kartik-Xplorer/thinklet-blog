@@ -47,7 +47,13 @@ const CustomLogo = ({
 	useLocalLogo?: boolean;
 }) => {
 	const blogTitle = generateBlogTitleWithoutDisplayTitle(publication);
-	const [isDarkMode, setIsDarkMode] = useState(false);
+	// Check dark mode immediately if we're on the client
+	const [isDarkMode, setIsDarkMode] = useState(() => {
+		if (typeof window !== 'undefined') {
+			return document.documentElement.classList.contains('dark');
+		}
+		return false;
+	});
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
@@ -57,6 +63,7 @@ const CustomLogo = ({
 			setIsDarkMode(dark);
 		};
 		
+		// Check immediately
 		checkDarkMode();
 		
 		const observer = new MutationObserver(checkDarkMode);
@@ -70,15 +77,6 @@ const CustomLogo = ({
 
 	// Use local SVG logos if useLocalLogo is true
 	if (useLocalLogo) {
-		// Use light logo as fallback during SSR, then switch based on mounted state
-		const logoSrc = (mounted && isDarkMode)
-			? '/assets/ThinkLet-dark.svg' 
-			: '/assets/ThinkLet.svg';
-		
-		// Dark logo has different dimensions (919x252) vs light (221x61)
-		const logoWidth = (mounted && isDarkMode) ? 919 : 221;
-		const logoHeight = (mounted && isDarkMode) ? 252 : 61;
-		
 		return (
 			<h1 className="blog-main-logo">
 				<Link
@@ -90,15 +88,26 @@ const CustomLogo = ({
 					aria-label={`${blogTitle} home page`}
 					href={`/${isPostPage ? '?source=top_nav_blog_home' : ''}`}
 				>
+					{/* Light mode logo */}
 					<CustomImage
-						key={logoSrc}
 						priority
 						objectFit="contain"
-						className="block w-full h-auto"
-						src={logoSrc}
-						originalSrc={logoSrc}
-						width={logoWidth}
-						height={logoHeight}
+						className="block w-full h-auto dark:hidden"
+						src="/assets/ThinkLet.svg"
+						originalSrc="/assets/ThinkLet.svg"
+						width={221}
+						height={61}
+						alt={blogTitle}
+					/>
+					{/* Dark mode logo */}
+					<CustomImage
+						priority
+						objectFit="contain"
+						className="hidden w-full h-auto dark:block"
+						src="/assets/ThinkLet-dark.svg"
+						originalSrc="/assets/ThinkLet-dark.svg"
+						width={919}
+						height={252}
 						alt={blogTitle}
 					/>
 				</Link>
@@ -187,7 +196,13 @@ const DefaultLogo = ({
 function PublicationLogo(props: PublicationLogoProps) {
 	const { publication, size, withProfileImage, isPostPage } = props;
 	const { preferences } = publication;
-	const [isDarkMode, setIsDarkMode] = useState(false);
+	// Check dark mode immediately if we're on the client
+	const [isDarkMode, setIsDarkMode] = useState(() => {
+		if (typeof window !== 'undefined') {
+			return document.documentElement.classList.contains('dark');
+		}
+		return false;
+	});
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => {
@@ -198,6 +213,7 @@ function PublicationLogo(props: PublicationLogoProps) {
 			setIsDarkMode(dark);
 		};
 		
+		// Check immediately
 		checkDarkMode();
 		
 		// Watch for theme changes
