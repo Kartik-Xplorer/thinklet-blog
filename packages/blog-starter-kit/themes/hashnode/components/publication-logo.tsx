@@ -69,14 +69,15 @@ const CustomLogo = ({
 	}, []);
 
 	// Use local SVG logos if useLocalLogo is true
-	if (useLocalLogo && mounted) {
-		const logoSrc = isDarkMode 
+	if (useLocalLogo) {
+		// Use light logo as fallback during SSR, then switch based on mounted state
+		const logoSrc = (mounted && isDarkMode)
 			? '/assets/ThinkLet-dark.svg' 
 			: '/assets/ThinkLet.svg';
 		
 		// Dark logo has different dimensions (919x252) vs light (221x61)
-		const logoWidth = isDarkMode ? 919 : 221;
-		const logoHeight = isDarkMode ? 252 : 61;
+		const logoWidth = (mounted && isDarkMode) ? 919 : 221;
+		const logoHeight = (mounted && isDarkMode) ? 252 : 61;
 		
 		return (
 			<h1 className="blog-main-logo">
@@ -90,6 +91,7 @@ const CustomLogo = ({
 					href={`/${isPostPage ? '?source=top_nav_blog_home' : ''}`}
 				>
 					<CustomImage
+						key={logoSrc}
 						priority
 						objectFit="contain"
 						className="block w-full h-auto"
