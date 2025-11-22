@@ -3,17 +3,14 @@ import { useEffect, useState } from 'react';
 
 import { getHashId } from '../utils/commonUtils';
 import { useAppContext } from './contexts/appContext';
-import { Button } from './custom-button';
-import { ExternalArrowSVG, HashnodeSVG } from './icons';
-import { NoCommentsLightSVG } from './icons/svgs';
 
 interface Props {
 	isPublicationPost: boolean;
 	currentFilter: string;
 }
 
-const PostComments = dynamic(() =>
-	import('../components/post-comments').then((mod) => mod.PostComments),
+const PostCommentsEnhanced = dynamic(() =>
+	import('../components/post-comments-enhanced').then((mod) => mod.PostCommentsEnhanced),
 );
 
 function ResponseList(props: Props) {
@@ -47,28 +44,9 @@ function ResponseList(props: Props) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentFilter, hashId, initialResponsesLoaded, post.responseCount]);
 
-	if (post.responseCount === 0) {
-		const discussionUrl = `https://hashnode.com/discussions/post/${post.id}`;
-		return (
-			<div className="flex h-3/5 flex-col items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-				<Button
-					as="a"
-					href={discussionUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					icon={<HashnodeSVG className="h-5 w-5 stroke-current" />}
-					label="Add a comment"
-					secondaryIcon={<ExternalArrowSVG className="h-4 w-4 stroke-current" />}
-				/>
-				<NoCommentsLightSVG className="h-40 w-40" />
-				<p>No comments yet</p>
-			</div>
-		);
-	}
-
 	return (
 		<div className="mx-2 pb-10 lg:mx-0" id="comments-list">
-			<PostComments />
+			<PostCommentsEnhanced />
 			{isLoading &&
 				[...Array(3).keys()].map((val: number) => (
 					<div
