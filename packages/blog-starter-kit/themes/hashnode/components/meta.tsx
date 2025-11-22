@@ -22,6 +22,7 @@ export const Meta = () => {
 			{favicon ? <link rel="icon" type="image/png" href={favicon} /> : defaultFavicons}
 			<meta name="msapplication-config" content="/favicon/browserconfig.xml" />
 			<link rel="alternate" type="application/rss+xml" href="/feed.xml" />
+			<meta name="google-site-verification" content="kwXpb063096p3ZwvI6ddOP-GJW_hLVyxBTNQLNM685A" />
 			{metaTags && parse(metaTags)}
 		</Head>
 	);
