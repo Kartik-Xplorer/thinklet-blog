@@ -16,18 +16,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 		const token = authHeader.replace('Bearer ', '');
 		const {
-			data: { user, session },
+			data: { user },
 			error,
 		} = await supabase.auth.getUser(token);
 
-		if (error || !user || !session) {
+		if (error || !user) {
 			return res.status(401).json({ error: 'Invalid token' });
 		}
 
+		// Get session separately if needed
+		const { data: { session } } = await supabase.auth.getSession();
+
 		return res.status(200).json({
 			user,
-			session,
-			accessToken: session.access_token,
+			session: session || null,
+			accessToken: token,
 		});
 	} catch (error: any) {
 		return res.status(500).json({ error: error.message || 'Internal server error' });

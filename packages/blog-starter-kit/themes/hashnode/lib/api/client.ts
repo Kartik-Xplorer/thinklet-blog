@@ -11,7 +11,7 @@ const isServerSide = typeof window === 'undefined';
  * @returns new ClientConfig
  */
 
-export const getUrqlClientConfig = (ssrExchange: Exchange) => ({
+export const getUrqlClientConfig = (ssrExchange: Exchange | any) => ({
     url: process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT,
     exchanges: [
       cacheExchange({

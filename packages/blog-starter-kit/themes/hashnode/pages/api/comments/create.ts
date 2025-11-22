@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createServerSupabaseClient } from '../../../lib/supabase/client';
-import { request } from 'graphql-request';
-import { AddCommentDocument } from '../../../generated/graphql';
+import { request, gql } from 'graphql-request';
 
 const GQL_ENDPOINT = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
 const HASHNODE_AUTH_TOKEN = process.env.HASHNODE_AUTH_TOKEN; // Personal access token for Hashnode API
@@ -72,14 +71,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		// Sync to Hashnode in the background (don't wait for it)
 		if (HASHNODE_AUTH_TOKEN && !parentCommentId) {
 			// Only sync top-level comments to Hashnode (replies can be handled separately)
-			syncToHashnode(postId, contentMarkdown, comment.id).catch((error) => {
+			syncToHashnode(postId, contentMarkdown, comment.id).catch(async (error) => {
 				console.error('Error syncing comment to Hashnode:', error);
 				// Update comment to mark sync as failed (optional)
-				supabase
-					.from('comments')
-					.update({ synced_to_hashnode: false })
-					.eq('id', comment.id)
-					.catch(console.error);
+				try {
+					await supabase
+						.from('comments')
+						.update({ synced_to_hashnode: false })
+						.eq('id', comment.id);
+				} catch (updateError) {
+					console.error('Error updating comment sync status:', updateError);
+				}
 			});
 		}
 
@@ -99,6 +101,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 	}
 }
 
+const ADD_COMMENT_MUTATION = `
+	mutation AddComment($input: AddCommentInput!) {
+		addComment(input: $input) {
+			comment {
+				id
+				dateAdded
+				content {
+					html
+					markdown
+				}
+				author {
+					id
+					name
+					username
+					profilePicture
+				}
+				totalReactions
+			}
+		}
+	}
+`;
+
 async function syncToHashnode(postId: string, contentMarkdown: string, supabaseCommentId: string) {
 	if (!HASHNODE_AUTH_TOKEN || !GQL_ENDPOINT) {
 		throw new Error('Hashnode credentials not configured');
@@ -112,7 +136,13 @@ async function syncToHashnode(postId: string, contentMarkdown: string, supabaseC
 			},
 		};
 
-		const data = await request(GQL_ENDPOINT, AddCommentDocument, variables, {
+		const data = await request<{
+			addComment?: {
+				comment?: {
+					id: string;
+				};
+			};
+		}>(GQL_ENDPOINT, ADD_COMMENT_MUTATION, variables, {
 			Authorization: `Bearer ${HASHNODE_AUTH_TOKEN}`,
 		});
 
