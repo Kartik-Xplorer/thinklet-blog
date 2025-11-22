@@ -111,7 +111,8 @@ export const PostHeader = ({ post, morePosts }: Props) => {
 			triggerCustomWidgetEmbed(post.publication?.id.toString());
 			setCanLoadEmbeds(true);
 		})();
-	}, []);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [post?.id]);
 	const authorsArray = [post.author, ...(post.coAuthors || [])];
 	return (
 		<Fragment>

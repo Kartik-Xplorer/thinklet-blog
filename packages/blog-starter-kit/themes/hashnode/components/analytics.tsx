@@ -135,6 +135,7 @@ export const Analytics = () => {
 		_sendPageViewsToHashnodeGoogleAnalytics();
 		_sendViewsToHashnodeInternalAnalytics();
 		_sendViewsToAdvancedAnalyticsDashboard();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return null;

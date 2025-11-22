@@ -5,6 +5,7 @@ import 'tailwindcss/tailwind.css';
 
 import { GlobalFontVariables } from '../components/fonts';
 import { getUrqlClientConfig } from '../lib/api/client';
+import { SupabaseAuthProvider } from '../components/contexts/supabaseAuthContext';
 import '../styles/index.css';
 
 import { Fragment } from 'react';
@@ -21,7 +22,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 	return (
 		<Fragment>
 			<GlobalFontVariables />
-			<Component {...pageProps} />
+			<SupabaseAuthProvider>
+				<Component {...pageProps} />
+			</SupabaseAuthProvider>
 		</Fragment>
 	);
 }

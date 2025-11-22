@@ -162,7 +162,7 @@ const TocRenderDesign = (props: TocRenderDesignProps) => {
 
 		setIsOverflowing(shouldShowMoreOption);
 		setTocFullVisibility(!hasEnoughItems || hideShowMoreOption === true);
-	}, []);
+	}, [list, hideShowMoreOption]);
 	return (
 		<div
 			className={twJoin(

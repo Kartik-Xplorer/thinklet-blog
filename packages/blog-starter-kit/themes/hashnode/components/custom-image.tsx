@@ -47,7 +47,7 @@ function CustomImage(props: Props) {
   }
 
   // Notes we are passing whole props object here
-  return <Image {...originalRestOfTheProps} src={src || originalSrc} />;
+  return <Image {...originalRestOfTheProps} src={src || originalSrc} alt={alt} />;
 }
 
 export default CustomImage;

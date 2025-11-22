@@ -1,0 +1,20 @@
+mutation AddComment($input: AddCommentInput!) {
+	addComment(input: $input) {
+		comment {
+			id
+			dateAdded
+			content {
+				html
+				markdown
+			}
+			author {
+				id
+				name
+				username
+				profilePicture
+			}
+			totalReactions
+		}
+	}
+}
+

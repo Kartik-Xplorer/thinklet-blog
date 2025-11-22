@@ -92,6 +92,7 @@ const useStickyScroll = ({ elRef }: Props) => {
   useEffect(() => {
     if (!elRef.current) return;
     setElement(elRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -102,11 +103,15 @@ const useStickyScroll = ({ elRef }: Props) => {
       if (elRef.current) elRef.current.style.transform = 'translateY(0px)';
     }
 
+    // Capture the animation ID at the time of effect execution
+    const currentAnimationId = scrollRef.current.animation;
+
     // eslint-disable-next-line consistent-return
     return () => {
       window.removeEventListener('scroll', handleNavScroll);
-      if (scrollRef.current.animation) cancelAnimationFrame(scrollRef.current.animation);
+      if (currentAnimationId) cancelAnimationFrame(currentAnimationId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldAddScroll]);
 
   useEffect(() => {

@@ -44,7 +44,8 @@ function ResponseList(props: Props) {
 			}
 			el.scrollIntoView();
 		})();
-	}, [currentFilter]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentFilter, hashId, initialResponsesLoaded, post.responseCount]);
 
 	if (post.responseCount === 0) {
 		const discussionUrl = `https://hashnode.com/discussions/post/${post.id}`;
