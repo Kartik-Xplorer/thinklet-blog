@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createServerSupabaseClient } from '../../../lib/supabase/client';
+import { createServerSupabaseClient, createAuthenticatedServerSupabaseClient } from '../../../lib/supabase/client';
 import { request, gql } from 'graphql-request';
 
 const GQL_ENDPOINT = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
@@ -26,8 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			});
 		}
 
-		const supabase = createServerSupabaseClient();
-
 		// Get authenticated user from Supabase
 		const authHeader = req.headers.authorization;
 		if (!authHeader) {
@@ -35,6 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		}
 
 		const token = authHeader.replace('Bearer ', '');
+		
+		// Create a Supabase client to verify the user token
+		const supabase = createServerSupabaseClient();
+		
+		// Verify the user token
 		const {
 			data: { user },
 			error: authError,
@@ -47,10 +50,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			});
 		}
 
+		// Create an authenticated Supabase client with the access token
+		// This ensures RLS policies can identify the user via auth.uid()
+		const authenticatedSupabase = createAuthenticatedServerSupabaseClient(token);
+
 		// Get user profile (optional - don't fail if profile doesn't exist)
 		let profile = null;
 		try {
-			const { data } = await supabase
+			const { data } = await authenticatedSupabase
 				.from('profiles')
 				.select('*')
 				.eq('id', user.id)
@@ -67,8 +74,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			return res.status(400).json({ error: 'Missing required fields' });
 		}
 
-		// Save comment to Supabase first
-		const { data: comment, error: dbError } = await supabase
+		// Save comment to Supabase first using authenticated client
+		// The access token in the headers allows RLS policies to identify the user
+		const { data: comment, error: dbError } = await authenticatedSupabase
 			.from('comments')
 			.insert({
 				post_id: postId,
@@ -105,11 +113,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		// Sync to Hashnode in the background (don't wait for it)
 		if (HASHNODE_AUTH_TOKEN && !parentCommentId) {
 			// Only sync top-level comments to Hashnode (replies can be handled separately)
-			syncToHashnode(postId, contentMarkdown, comment.id).catch(async (error) => {
+			syncToHashnode(postId, contentMarkdown, comment.id, token).catch(async (error) => {
 				console.error('Error syncing comment to Hashnode:', error);
 				// Update comment to mark sync as failed (optional)
 				try {
-					await supabase
+					await authenticatedSupabase
 						.from('comments')
 						.update({ synced_to_hashnode: false })
 						.eq('id', comment.id);
@@ -175,7 +183,12 @@ const ADD_COMMENT_MUTATION = `
 	}
 `;
 
-async function syncToHashnode(postId: string, contentMarkdown: string, supabaseCommentId: string) {
+async function syncToHashnode(
+	postId: string,
+	contentMarkdown: string,
+	supabaseCommentId: string,
+	accessToken: string
+) {
 	if (!HASHNODE_AUTH_TOKEN || !GQL_ENDPOINT) {
 		throw new Error('Hashnode credentials not configured');
 	}
@@ -199,9 +212,11 @@ async function syncToHashnode(postId: string, contentMarkdown: string, supabaseC
 		});
 
 		if (data.addComment?.comment?.id) {
+			// Create authenticated client for the update operation
+			const authenticatedSupabase = createAuthenticatedServerSupabaseClient(accessToken);
+			
 			// Update Supabase comment with Hashnode ID
-			const supabase = createServerSupabaseClient();
-			await supabase
+			await authenticatedSupabase
 				.from('comments')
 				.update({
 					hashnode_comment_id: data.addComment.comment.id,

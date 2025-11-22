@@ -17,13 +17,28 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 	const [user, setUser] = useState<User | null>(null);
 	const [session, setSession] = useState<Session | null>(null);
 	const [loading, setLoading] = useState(true);
-	const supabase = createSupabaseClient();
+	
+	// Check if Supabase is configured
+	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+	const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+	
+	const supabase = isSupabaseConfigured ? createSupabaseClient() : null;
 
 	useEffect(() => {
+		// Skip auth setup if Supabase is not configured (e.g., during build)
+		if (!supabase || !isSupabaseConfigured) {
+			setLoading(false);
+			return;
+		}
+
 		// Get initial session
 		supabase.auth.getSession().then(({ data: { session } }) => {
 			setSession(session);
 			setUser(session?.user ?? null);
+			setLoading(false);
+		}).catch(() => {
+			// Handle errors gracefully during build/SSR
 			setLoading(false);
 		});
 
@@ -37,9 +52,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 		});
 
 		return () => subscription.unsubscribe();
-	}, [supabase.auth]);
+	}, [supabase, isSupabaseConfigured]);
 
 	const signIn = async (email: string, password: string) => {
+		if (!supabase) {
+			return { error: new Error('Supabase is not configured') };
+		}
 		const { error } = await supabase.auth.signInWithPassword({
 			email,
 			password,
@@ -48,6 +66,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 	};
 
 	const signUp = async (email: string, password: string, name?: string) => {
+		if (!supabase) {
+			return { error: new Error('Supabase is not configured') };
+		}
 		const { data, error } = await supabase.auth.signUp({
 			email,
 			password,
@@ -79,7 +100,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 	};
 
 	const signOut = async () => {
-		await supabase.auth.signOut();
+		if (supabase) {
+			await supabase.auth.signOut();
+		}
 	};
 
 	return (

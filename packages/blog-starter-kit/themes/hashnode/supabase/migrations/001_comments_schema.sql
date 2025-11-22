@@ -51,7 +51,7 @@ CREATE POLICY "Anyone can view comments"
 
 CREATE POLICY "Authenticated users can create comments"
   ON comments FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Users can update their own comments"
   ON comments FOR UPDATE

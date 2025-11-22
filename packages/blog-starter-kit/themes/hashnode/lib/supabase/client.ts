@@ -11,6 +11,15 @@ export const createSupabaseClient = () => {
 		const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 		
 		if (!supabaseUrl || !supabaseAnonKey) {
+			// During build/static generation, return a dummy client to prevent errors
+			// This allows the build to complete even without env vars configured
+			if (typeof window === 'undefined') {
+				// Server-side: return a minimal client that won't crash
+				return createClient(
+					supabaseUrl || 'https://placeholder.supabase.co',
+					supabaseAnonKey || 'placeholder-key'
+				);
+			}
 			throw new Error('Missing Supabase environment variables. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
 		}
 		
@@ -28,5 +37,26 @@ export const createServerSupabaseClient = () => {
 	}
 
 	return createClient(supabaseUrl, supabaseAnonKey);
+};
+
+// Server-side Supabase client with user authentication token
+// This ensures RLS policies can identify the user via auth.uid()
+export const createAuthenticatedServerSupabaseClient = (accessToken: string) => {
+	const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+	const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+	if (!supabaseUrl || !supabaseAnonKey) {
+		throw new Error('Missing Supabase environment variables');
+	}
+
+	const client = createClient(supabaseUrl, supabaseAnonKey, {
+		global: {
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+			},
+		},
+	});
+
+	return client;
 };
 
