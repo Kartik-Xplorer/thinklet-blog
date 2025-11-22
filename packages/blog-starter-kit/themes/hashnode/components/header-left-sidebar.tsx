@@ -34,7 +34,7 @@ const LeftSidebarButton = (props: Props) => {
         variant="leftSidebar"
         btnRef={triggerRef}
       >
-        <BarsSVG className="h-6 w-6 stroke-current" />
+        <BarsSVG className="h-6 w-6 stroke-current text-slate-800 dark:text-white" />
       </CommonHeaderIconBtn>
     </>
   );
