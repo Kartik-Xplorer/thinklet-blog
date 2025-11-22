@@ -70,6 +70,9 @@ function TocSheet({ list }: { list: any[] }) {
                   <DialogPrimitive.DialogTitle className="py-2 text-sm font-medium uppercase text-slate-500 dark:text-slate-400">
                     Table of contents
                   </DialogPrimitive.DialogTitle>
+                  <DialogPrimitive.DialogDescription className="sr-only">
+                    Navigate through the article sections
+                  </DialogPrimitive.DialogDescription>
 
                   <DialogPrimitive.Close className="" asChild>
                     <div className="flex justify-between gap-2">

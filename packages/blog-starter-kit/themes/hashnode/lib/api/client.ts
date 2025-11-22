@@ -11,9 +11,17 @@ const isServerSide = typeof window === 'undefined';
  * @returns new ClientConfig
  */
 
-export const getUrqlClientConfig = (ssrExchange: Exchange | any) => ({
-    url: process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT,
-    exchanges: [
+export const getUrqlClientConfig = (ssrExchange: Exchange | any) => {
+	const endpoint = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
+	
+	// If endpoint is not set, use a placeholder (build will still work)
+	if (!endpoint) {
+		console.warn('NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT not set, using placeholder');
+	}
+
+	return {
+		url: endpoint || 'https://gql.hashnode.com',
+		exchanges: [
       cacheExchange({
         // relayPagination() keeps previous results in the cache; ⚠️ this leads to unexpected results if used in API routes due to possible different execution environments
         resolvers: {
@@ -64,7 +72,8 @@ export const getUrqlClientConfig = (ssrExchange: Exchange | any) => ({
       }),
       fetchExchange,
     ],
-  });
+  };
+};
 
   // createSSRExchange is used to create a new ssr exchange instance
 // which is then passed `getUrqlClientConfig`

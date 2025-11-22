@@ -48,20 +48,43 @@ export default function Index(
 ) {
 	const { host, publication, initialLimit } = props;
 
+	// Hooks must be called unconditionally before any early returns
 	const ssrCache = createSSRExchange();
 	const urqlClient = initUrqlClient(getUrqlClientConfig(ssrCache), false); // TODO: Check why is urqlClient not automatically being passed in props. Ideally, since we are using WithUrqlClient HOC, it should automatically come
 
 	const [fetching, setFetching] = useState(false);
 
-	const { author, preferences, pinnedPost } = publication;
-	const dynamicLimit = preferences.layout === 'magazine' ? 12 : 6;
-
+	const pinnedPost = publication?.pinnedPost;
 	const [{ data }] = useQuery({
 		query: HomePagePostsDocument,
-		variables: { host, first: initialLimit, filter: { excludePinnedPost: !!pinnedPost } },
+		variables: { 
+			host: host || '', 
+			first: initialLimit || 6, 
+			filter: { excludePinnedPost: !!pinnedPost } 
+		},
+		pause: !host || !publication, // Pause query if host or publication is not available
 	});
 
-	const { posts } = data?.publication!;
+	// If host is not provided, show error message
+	if (!host || !publication) {
+		return (
+			<Layout>
+				<div className="flex min-h-screen items-center justify-center">
+					<div className="text-center">
+						<h1 className="mb-4 text-2xl font-bold">Configuration Error</h1>
+						<p className="text-slate-600 dark:text-slate-400">
+							Please set NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST environment variable
+						</p>
+					</div>
+				</div>
+			</Layout>
+		);
+	}
+
+	const { author, preferences } = publication;
+	const dynamicLimit = preferences.layout === 'magazine' ? 12 : 6;
+
+	const posts = data?.publication?.posts || { edges: [], pageInfo: { hasNextPage: false, endCursor: null } };
 
 	const fetchedOnce = posts.edges.length > initialLimit;
 
@@ -200,6 +223,15 @@ export const getStaticProps = async () => {
 	const ssrCache = createSSRExchange();
 	const urqlClient = initUrqlClient(getUrqlClientConfig(ssrCache), false);
 	const host = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST;
+	
+	// If host is not set, return not found (build will still work)
+	if (!host) {
+		console.warn('NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST not set, returning not found');
+		return {
+			notFound: true,
+			revalidate: 1,
+		};
+	}
 	const homePageInitialQueryVariables: HomePageInitialQueryVariables = {
 		host,
 	};

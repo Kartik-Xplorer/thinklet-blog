@@ -59,6 +59,9 @@ export default function CoAuthorsModal({ closeModal }: CoAuthorsModalProps) {
           <DialogPrimitive.DialogTitle className="w-full px-6 py-4 text-lg font-semibold">
             Authors in this article
           </DialogPrimitive.DialogTitle>
+          <DialogPrimitive.DialogDescription className="sr-only">
+            List of authors who contributed to this article
+          </DialogPrimitive.DialogDescription>
           <DialogPrimitive.Close className="absolute right-2 top-4 text-slate-900 dark:text-slate-50" asChild>
             <Button
               className="p-1 focus:outline-none focus-visible:ring focus-visible:ring-blue-600 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-800"

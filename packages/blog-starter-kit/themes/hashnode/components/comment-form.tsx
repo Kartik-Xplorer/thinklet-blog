@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSupabaseAuth } from './contexts/supabaseAuthContext';
 import { useAppContext } from './contexts/appContext';
@@ -20,7 +20,48 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 	const [content, setContent] = useState('');
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [userProfile, setUserProfile] = useState<{ name: string; avatar_url: string | null } | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+	// Fetch user profile when signed in
+	useEffect(() => {
+		const fetchUserProfile = async () => {
+			if (!user) {
+				setUserProfile(null);
+				return;
+			}
+
+			try {
+				const supabase = createSupabaseClient();
+				const { data: profile } = await supabase
+					.from('profiles')
+					.select('name, avatar_url')
+					.eq('id', user.id)
+					.single();
+
+				if (profile) {
+					setUserProfile({
+						name: profile.name || user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+						avatar_url: profile.avatar_url || user.user_metadata?.avatar_url || null,
+					});
+				} else {
+					// Profile doesn't exist yet, use user metadata
+					setUserProfile({
+						name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+						avatar_url: user.user_metadata?.avatar_url || null,
+					});
+				}
+			} catch (error) {
+				// Fallback to user metadata if profile fetch fails
+				setUserProfile({
+					name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+					avatar_url: user.user_metadata?.avatar_url || null,
+				});
+			}
+		};
+
+		fetchUserProfile();
+	}, [user]);
 
 	if (!post) return null;
 
@@ -64,8 +105,9 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 			});
 
 			if (!res.ok) {
-				const errorData = await res.json();
-				throw new Error(errorData.error || 'Failed to post comment');
+				const errorData = await res.json().catch(() => ({ error: 'Failed to post comment' }));
+				const errorMessage = errorData.error || `Failed to post comment (${res.status})`;
+				throw new Error(errorMessage);
 			}
 
 			setContent('');
@@ -73,7 +115,18 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 				onCommentAdded();
 			}
 		} catch (err: any) {
-			setError(err.message || 'Failed to post comment');
+			const errorMessage = err.message || 'Failed to post comment';
+			console.error('Comment submission error:', err);
+			setError(errorMessage);
+			
+			// Provide helpful error messages for common issues
+			if (errorMessage.includes('Supabase') || errorMessage.includes('configuration')) {
+				setError('Server configuration error. Please contact the site administrator.');
+			} else if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
+				setError('Your session has expired. Please sign in again.');
+			} else if (errorMessage.includes('500')) {
+				setError('Server error. Please try again later or contact support if the issue persists.');
+			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -102,22 +155,34 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 		);
 	}
 
+	if (!userProfile && user) {
+		// Still loading profile
+		return <div className="p-4 text-center text-slate-500">Loading...</div>;
+	}
+
 	return (
 		<form onSubmit={handleSubmit} className="mb-4">
 			<div className="flex gap-3">
 				<div className="h-10 w-10 shrink-0 rounded-full bg-slate-100 dark:bg-slate-700">
-					<ProfileImage
-						width="40"
-						height="40"
-						user={{
-							id: user.id,
-							name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-							profilePicture: user.user_metadata?.avatar_url || null,
-						}}
-						hoverDisabled={true}
-					/>
+					{userProfile && (
+						<ProfileImage
+							width="40"
+							height="40"
+							user={{
+								id: user.id,
+								name: userProfile.name,
+								profilePicture: userProfile.avatar_url,
+							}}
+							hoverDisabled={true}
+						/>
+					)}
 				</div>
 				<div className="flex-1">
+					{userProfile && (
+						<p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+							{userProfile.name}
+						</p>
+					)}
 					<textarea
 						ref={textareaRef}
 						value={content}

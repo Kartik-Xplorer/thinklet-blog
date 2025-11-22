@@ -18,12 +18,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 	}
 
 	try {
+		// Check if Supabase is configured
+		if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+			console.error('Supabase environment variables not configured');
+			return res.status(500).json({ 
+				error: 'Server configuration error: Supabase not configured. Please check environment variables.' 
+			});
+		}
+
 		const supabase = createServerSupabaseClient();
 
 		// Get authenticated user from Supabase
 		const authHeader = req.headers.authorization;
 		if (!authHeader) {
-			return res.status(401).json({ error: 'Unauthorized' });
+			return res.status(401).json({ error: 'Unauthorized: No authorization header' });
 		}
 
 		const token = authHeader.replace('Bearer ', '');
@@ -33,15 +41,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 		} = await supabase.auth.getUser(token);
 
 		if (authError || !user) {
-			return res.status(401).json({ error: 'Unauthorized' });
+			console.error('Auth error:', authError);
+			return res.status(401).json({ 
+				error: authError?.message || 'Unauthorized: Invalid or expired token' 
+			});
 		}
 
-		// Get user profile
-		const { data: profile } = await supabase
-			.from('profiles')
-			.select('*')
-			.eq('id', user.id)
-			.single();
+		// Get user profile (optional - don't fail if profile doesn't exist)
+		let profile = null;
+		try {
+			const { data } = await supabase
+				.from('profiles')
+				.select('*')
+				.eq('id', user.id)
+				.single();
+			profile = data;
+		} catch (error) {
+			// Profile might not exist yet - that's okay, we'll use user metadata
+			console.debug('Profile not found, using user metadata:', error);
+		}
 
 		const { postId, content, contentMarkdown, parentCommentId }: CreateCommentRequest = req.body;
 
@@ -64,8 +82,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			.single();
 
 		if (dbError) {
-			console.error('Error saving comment to Supabase:', dbError);
-			return res.status(500).json({ error: 'Failed to save comment' });
+			console.error('Error saving comment to Supabase:', {
+				message: dbError.message,
+				details: dbError.details,
+				hint: dbError.hint,
+				code: dbError.code,
+			});
+			
+			// Provide more helpful error messages
+			let errorMessage = 'Failed to save comment';
+			if (dbError.code === 'PGRST116') {
+				errorMessage = 'Comments table not found. Please run database migrations.';
+			} else if (dbError.code === '42501') {
+				errorMessage = 'Permission denied. Please check Row Level Security policies.';
+			} else if (dbError.message) {
+				errorMessage = `Failed to save comment: ${dbError.message}`;
+			}
+			
+			return res.status(500).json({ error: errorMessage });
 		}
 
 		// Sync to Hashnode in the background (don't wait for it)
@@ -85,19 +119,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			});
 		}
 
+		// Get user name from profile or fallback to user metadata
+		const userName = profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Anonymous';
+		const userAvatar = profile?.avatar_url || user.user_metadata?.avatar_url || null;
+
 		// Return the comment with user info
 		return res.status(200).json({
 			...comment,
 			user: {
 				id: user.id,
 				email: user.email,
-				name: profile?.name || user.email?.split('@')[0] || 'Anonymous',
-				avatar_url: profile?.avatar_url || user.user_metadata?.avatar_url || null,
+				name: userName,
+				avatar_url: userAvatar,
 			},
 		});
 	} catch (error: any) {
-		console.error('Error creating comment:', error);
-		return res.status(500).json({ error: error.message || 'Internal server error' });
+		console.error('Error creating comment:', {
+			message: error.message,
+			stack: error.stack,
+			name: error.name,
+		});
+		
+		// Check if it's a Supabase configuration error
+		if (error.message?.includes('Missing Supabase environment variables')) {
+			return res.status(500).json({ 
+				error: 'Server configuration error: Supabase environment variables are missing. Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.' 
+			});
+		}
+		
+		return res.status(500).json({ 
+			error: error.message || 'Internal server error. Please check server logs for details.' 
+		});
 	}
 }
 

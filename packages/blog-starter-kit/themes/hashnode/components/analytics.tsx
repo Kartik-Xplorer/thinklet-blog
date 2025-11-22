@@ -20,36 +20,44 @@ export const Analytics = () => {
 
 	const _sendViewsToHashnodeInternalAnalytics = async () => {
 		// Send to Hashnode's own internal analytics
-		const event: Record<string, string | number | object> = {
-			event_type: 'pageview',
-			time: new Date().getTime(),
-			event_properties: {
-				hostname: window.location.hostname,
-				url: window.location.pathname,
-				eventType: 'pageview',
-				publicationId: publication.id,
-				dateAdded: new Date().getTime(),
-				referrer: window.document.referrer,
-			},
-		};
+		try {
+			const event: Record<string, string | number | object> = {
+				event_type: 'pageview',
+				time: new Date().getTime(),
+				event_properties: {
+					hostname: window.location.hostname,
+					url: window.location.pathname,
+					eventType: 'pageview',
+					publicationId: publication.id,
+					dateAdded: new Date().getTime(),
+					referrer: window.document.referrer,
+				},
+			};
 
-		let deviceId = Cookies.get('__amplitudeDeviceID');
-		if (!deviceId) {
-			deviceId = uuidv4();
-			Cookies.set('__amplitudeDeviceID', deviceId, {
-				expires: 365 * 2,
-			}); // expire after two years
+			let deviceId = Cookies.get('__amplitudeDeviceID');
+			if (!deviceId) {
+				deviceId = uuidv4();
+				Cookies.set('__amplitudeDeviceID', deviceId, {
+					expires: 365 * 2,
+				}); // expire after two years
+			}
+
+			event['device_id'] = deviceId;
+
+			await fetch(`${BASE_PATH}/ping/data-event`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ events: [event] }),
+			}).catch((error) => {
+				// Silently fail analytics - don't break the page
+				console.debug('Analytics error (non-critical):', error);
+			});
+		} catch (error) {
+			// Silently fail analytics - don't break the page
+			console.debug('Analytics error (non-critical):', error);
 		}
-
-		event['device_id'] = deviceId;
-
-		await fetch(`${BASE_PATH}/ping/data-event`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({ events: [event] }),
-		});
 	};
 
 	function _sendViewsToAdvancedAnalyticsDashboard() {

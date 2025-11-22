@@ -7,7 +7,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 	}
 
 	try {
+		// Check if Supabase is configured
+		if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+			console.error('Supabase environment variables not configured');
+			return res.status(500).json({ 
+				error: 'Server configuration error: Supabase not configured' 
+			});
+		}
+
 		const { postId } = req.query;
+		if (!postId || typeof postId !== 'string') {
+			return res.status(400).json({ error: 'Invalid post ID' });
+		}
+
 		const supabase = createServerSupabaseClient();
 
 		// Fetch comments from Supabase

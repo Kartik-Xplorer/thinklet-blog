@@ -209,6 +209,15 @@ export const getStaticProps: GetStaticProps<Props, Params> = async ({ params }) 
 	const host = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST;
 	const slug = params.slug;
 
+	// If environment variables are not set, return not found
+	if (!endpoint || !host) {
+		console.warn('Hashnode environment variables not set, returning not found');
+		return {
+			notFound: true,
+			revalidate: 1,
+		};
+	}
+
 	const [postData, morePostsData] = await Promise.all([
 		request(endpoint, SinglePostByPublicationDocument, { host, slug }),
 		request(endpoint, MorePostsByPublicationDocument, { first: 4, host }),
@@ -226,7 +235,16 @@ export const getStaticProps: GetStaticProps<Props, Params> = async ({ params }) 
 		};
 	}
 
-	const pageData = await request(endpoint, PageByPublicationDocument, { host, slug });
+	let pageData;
+	try {
+		pageData = await request(endpoint, PageByPublicationDocument, { host, slug });
+	} catch (error) {
+		console.warn('Failed to fetch page data:', error);
+		return {
+			notFound: true,
+			revalidate: 1,
+		};
+	}
 
 	if (pageData.publication?.staticPage) {
 		return {
@@ -246,25 +264,46 @@ export const getStaticProps: GetStaticProps<Props, Params> = async ({ params }) 
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-	const data = await request(
-		process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT,
-		SlugPostsByPublicationDocument,
-		{
-			first: 10,
-			host: process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST,
-		},
-	);
+	const endpoint = process.env.NEXT_PUBLIC_HASHNODE_GQL_ENDPOINT;
+	const host = process.env.NEXT_PUBLIC_HASHNODE_PUBLICATION_HOST;
 
-	const postSlugs = (data.publication?.posts.edges ?? []).map((edge) => edge.node.slug);
+	// If environment variables are not set, return empty paths (build will still work)
+	if (!endpoint || !host) {
+		console.warn('Hashnode environment variables not set, returning empty paths for static generation');
+		return {
+			paths: [],
+			fallback: 'blocking',
+		};
+	}
 
-	return {
-		paths: postSlugs.map((slug) => {
-			return {
-				params: {
-					slug: slug,
-				},
-			};
-		}),
-		fallback: 'blocking',
-	};
+	try {
+		const data = await request(
+			endpoint,
+			SlugPostsByPublicationDocument,
+			{
+				first: 10,
+				host: host,
+			},
+		);
+
+		const postSlugs = (data.publication?.posts.edges ?? []).map((edge) => edge.node.slug);
+
+		return {
+			paths: postSlugs.map((slug) => {
+				return {
+					params: {
+						slug: slug,
+					},
+				};
+			}),
+			fallback: 'blocking',
+		};
+	} catch (error) {
+		// If request fails, return empty paths (build will still work)
+		console.warn('Failed to fetch static paths, using fallback:', error);
+		return {
+			paths: [],
+			fallback: 'blocking',
+		};
+	}
 };
