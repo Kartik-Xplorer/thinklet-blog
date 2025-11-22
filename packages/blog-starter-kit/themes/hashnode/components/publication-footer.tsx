@@ -1,10 +1,38 @@
-import Image from 'next/legacy/image';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { twJoin } from 'tailwind-merge';
 import { resizeImage } from '../utils/image';
+import CustomImage from './custom-image';
 
 function PublicationFooter(props: any) {
-	const { isTeam, authorName, title, imprint, logo } = props;
+	const { isTeam, authorName, title, imprint, logo, darkMode } = props;
+	const [isDarkMode, setIsDarkMode] = useState(false);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		// Check if dark mode is active
+		const checkDarkMode = () => {
+			const dark = document.documentElement.classList.contains('dark');
+			setIsDarkMode(dark);
+		};
+		
+		checkDarkMode();
+		
+		// Watch for theme changes
+		const observer = new MutationObserver(checkDarkMode);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+		
+		return () => observer.disconnect();
+	}, []);
+
+	// Use local SVG logos based on theme
+	const logoSrc = mounted
+		? (isDarkMode ? '/assets/ThinkLet-dark.svg' : '/assets/ThinkLet.svg')
+		: (isDarkMode && darkMode?.logo ? darkMode.logo : logo);
 
 	return (
 		<footer
@@ -39,14 +67,32 @@ function PublicationFooter(props: any) {
 			)}
 			<div className="blog-footer-credits flex flex-col items-center justify-center">
 				{/* Logo */}
-				{logo && (
+				{logoSrc && (
 					<div className="mb-8 flex flex-col items-center">
-						<Link href="/" className="relative block h-10 w-40">
-							<Image
-								layout="fill"
-								alt={title || `${authorName}'s ${isTeam ? 'team' : ''} blog`}
-								src={resizeImage(logo, { w: 1000, h: 250, c: 'thumb' })}
-							/>
+						<Link href="/" className="block w-auto max-w-xs">
+							{mounted && logoSrc.includes('/assets/ThinkLet') ? (
+								<CustomImage
+									priority
+									objectFit="contain"
+									className="block h-auto w-full"
+									src={logoSrc}
+									originalSrc={logoSrc}
+									width={isDarkMode ? 919 : 221}
+									height={isDarkMode ? 252 : 61}
+									alt={title || `${authorName}'s ${isTeam ? 'team' : ''} blog`}
+								/>
+							) : (
+								<CustomImage
+									priority
+									objectFit="contain"
+									className="block h-auto w-full"
+									src={resizeImage(logoSrc, { w: 1000, h: 250 })}
+									originalSrc={logoSrc}
+									width={1000}
+									height={250}
+									alt={title || `${authorName}'s ${isTeam ? 'team' : ''} blog`}
+								/>
+							)}
 						</Link>
 					</div>
 				)}

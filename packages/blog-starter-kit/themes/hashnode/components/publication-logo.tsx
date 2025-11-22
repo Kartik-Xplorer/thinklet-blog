@@ -36,6 +36,7 @@ const CustomLogo = ({
 	logoSrc,
 	size = 'lg',
 	isPostPage,
+	useLocalLogo = false,
 }: {
 	publication: Pick<PublicationFragment, 'title'> & {
 		author: Pick<User, 'name'>;
@@ -43,8 +44,65 @@ const CustomLogo = ({
 	logoSrc: Maybe<string> | undefined;
 	size?: 'xs' | 'sm' | 'lg' | 'xl';
 	isPostPage?: boolean | null;
+	useLocalLogo?: boolean;
 }) => {
 	const blogTitle = generateBlogTitleWithoutDisplayTitle(publication);
+	const [isDarkMode, setIsDarkMode] = useState(false);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		const checkDarkMode = () => {
+			const dark = document.documentElement.classList.contains('dark');
+			setIsDarkMode(dark);
+		};
+		
+		checkDarkMode();
+		
+		const observer = new MutationObserver(checkDarkMode);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['class'],
+		});
+		
+		return () => observer.disconnect();
+	}, []);
+
+	// Use local SVG logos if useLocalLogo is true
+	if (useLocalLogo && mounted) {
+		const logoSrc = isDarkMode 
+			? '/assets/ThinkLet-dark.svg' 
+			: '/assets/ThinkLet.svg';
+		
+		// Dark logo has different dimensions (919x252) vs light (221x61)
+		const logoWidth = isDarkMode ? 919 : 221;
+		const logoHeight = isDarkMode ? 252 : 61;
+		
+		return (
+			<h1 className="blog-main-logo">
+				<Link
+					className={twJoin(
+						'blog-logo focus-ring-base flex flex-row items-center',
+						'focus-ring-colors-base',
+						logoSizes[size],
+					)}
+					aria-label={`${blogTitle} home page`}
+					href={`/${isPostPage ? '?source=top_nav_blog_home' : ''}`}
+				>
+					<CustomImage
+						priority
+						objectFit="contain"
+						className="block w-full h-auto"
+						src={logoSrc}
+						originalSrc={logoSrc}
+						width={logoWidth}
+						height={logoHeight}
+						alt={blogTitle}
+					/>
+				</Link>
+			</h1>
+		);
+	}
 
 	return (
 		<h1 className="blog-main-logo">
@@ -153,16 +211,17 @@ function PublicationLogo(props: PublicationLogoProps) {
 	if (!publication) {
 		return null;
 	}
-	const useLogo = preferences.logo;
-	if (useLogo) {
-		// Use dark mode logo if available and dark mode is active
-		const logoSrc = mounted && isDarkMode && preferences.darkMode?.logo 
-			? preferences.darkMode.logo 
-			: preferences.logo;
-		return (
-			<CustomLogo publication={publication} logoSrc={logoSrc} size={size} isPostPage={isPostPage} />
-		);
-	}
+	
+	// Always use local SVG logos
+	return (
+		<CustomLogo 
+			publication={publication} 
+			logoSrc={preferences.logo} 
+			size={size} 
+			isPostPage={isPostPage}
+			useLocalLogo={true}
+		/>
+	);
 	return (
 		<DefaultLogo
 			publication={publication}

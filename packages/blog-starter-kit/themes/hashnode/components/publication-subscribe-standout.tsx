@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 
 import isEmail from 'validator/lib/isEmail';
+import { twJoin } from 'tailwind-merge';
 import { useAppContext } from './contexts/appContext';
 import Button from './hn-button';
 import { PaperPlaneSVG } from './icons/svgs';
@@ -71,38 +72,54 @@ function PublicationSubscribeStandOut() {
         to the newsletter, and don&apos;t miss out.
       </p>
       {!state.subscribed && (
-        <div className="flex flex-row overflow-hidden rounded-lg border border-slate-800 dark:border-slate-200 md:w-2/3">
-          <input
-            type="email"
-            ref={email}
-            onKeyUp={handleEmailChange}
-            placeholder="Enter your email address"
-            className="w-full bg-transparent p-3 text-black outline-none dark:text-white md:p-5 md:text-lg"
-          />
+        <div className="flex w-full max-w-md flex-row items-center gap-2 md:w-2/3">
+          <div className="relative flex-1">
+            <input
+              type="email"
+              ref={email}
+              onKeyUp={handleEmailChange}
+              placeholder="Enter your email address"
+              className={twJoin(
+                'w-full rounded-full border border-slate-200 bg-white px-6 py-3',
+                'text-sm text-slate-900 placeholder:text-slate-500',
+                'transition-colors outline-none',
+                'focus:border-slate-400 focus:ring-2 focus:ring-slate-200',
+                'dark:border-slate-700 dark:bg-slate-900 dark:text-slate-50',
+                'dark:placeholder:text-slate-400',
+                'dark:focus:border-slate-500 dark:focus:ring-slate-800',
+                'md:px-6 md:py-3.5 md:text-base'
+              )}
+            />
+          </div>
           <Button
             type="button"
             onClick={subscribe}
-            variant="transparent"
+            variant="primary"
             disabled={state.submitDisabled}
-            className="shrink-0 rounded-none bg-slate-800 px-3 font-bold uppercase tracking-wide text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-black dark:hover:bg-slate-300 md:px-5"
+            className="shrink-0 rounded-full px-6 py-3 font-semibold transition-colors md:px-8 md:py-3.5"
           >
-            Subscribe
+            <span className="flex items-center gap-2">
+              Subscribe
+              <PaperPlaneSVG className="h-4 w-4 fill-current" />
+            </span>
           </Button>
         </div>
       )}
       {state.subscribed && (
-        <div className="flex flex-col items-center overflow-hidden rounded-lg border border-green-600 bg-green-50 p-5 text-center text-slate-900 dark:border-green-400 dark:bg-green-900 dark:text-white md:w-2/3">
+        <div className="flex flex-col items-center overflow-hidden rounded-lg border border-green-600 bg-green-50 p-5 text-center text-slate-900 dark:border-green-400 dark:bg-green-900/50 dark:text-white md:w-2/3">
           <span className="text-green-600 dark:text-green-400">
             <PaperPlaneSVG className="[animation-iteration-count: 3] mb-5 h-10 w-10 animate-bounce fill-current" />
           </span>
-          <p className="font-semibold ">
+          <p className="font-semibold">
             We&apos;ve sent a confirmation email;
             <br />
             click on the link to complete your subscription to this newsletter.
           </p>
         </div>
       )}
-      {state.err && <div className="mt-2 text-red-600">{state.err}</div>}
+      {state.err && (
+        <div className="mt-2 text-sm text-red-600 dark:text-red-400">{state.err}</div>
+      )}
     </div>
   );
 }
