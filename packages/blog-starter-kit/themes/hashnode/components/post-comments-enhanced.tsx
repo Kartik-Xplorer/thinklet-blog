@@ -47,8 +47,10 @@ export const PostCommentsEnhanced = ({ showHashnodeComments = true }: PostCommen
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [post?.id]);
 
-	const handleCommentAdded = () => {
-		fetchSupabaseComments();
+	const handleCommentAdded = async () => {
+		// Add a small delay to ensure the comment is saved before refetching
+		await new Promise(resolve => setTimeout(resolve, 500));
+		await fetchSupabaseComments();
 		setReplyingTo(null);
 	};
 
@@ -126,12 +128,16 @@ export const PostCommentsEnhanced = ({ showHashnodeComments = true }: PostCommen
 				/>
 				{!isReply && (
 					<div className="mb-2">
-						<button
-							onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-							className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
-						>
-							{replyingTo === comment.id ? 'Cancel' : 'Reply'}
-						</button>
+						{/* Only show reply button for Supabase comments (UUID format) */}
+						{/* Hashnode comments have different ID format and can't be replied to */}
+						{comment.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(comment.id) && (
+							<button
+								onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+								className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
+							>
+								{replyingTo === comment.id ? 'Cancel' : 'Reply'}
+							</button>
+						)}
 					</div>
 				)}
 				{replyingTo === comment.id && (

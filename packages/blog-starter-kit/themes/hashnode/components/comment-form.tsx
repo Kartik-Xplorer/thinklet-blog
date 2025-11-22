@@ -110,8 +110,12 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 				throw new Error(errorMessage);
 			}
 
+			const commentContent = content.trim();
 			setContent('');
+			
+			// Call the callback to refresh comments
 			if (onCommentAdded) {
+				// Don't await - let it refresh in the background
 				onCommentAdded();
 			}
 		} catch (err: any) {
@@ -124,6 +128,8 @@ export function CommentForm({ parentCommentId = null, onCommentAdded, onCancel }
 				setError('Server configuration error. Please contact the site administrator.');
 			} else if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
 				setError('Your session has expired. Please sign in again.');
+			} else if (errorMessage.includes('Cannot reply') || errorMessage.includes('Parent comment')) {
+				setError(errorMessage); // Show the specific error about replying
 			} else if (errorMessage.includes('500')) {
 				setError('Server error. Please try again later or contact support if the issue persists.');
 			}

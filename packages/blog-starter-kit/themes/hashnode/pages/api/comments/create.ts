@@ -74,6 +74,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 			return res.status(400).json({ error: 'Missing required fields' });
 		}
 
+		// Validate parentCommentId if provided - must be a valid UUID
+		let validParentCommentId: string | null = null;
+		if (parentCommentId) {
+			// Check if it's a valid UUID format (Supabase uses UUIDs)
+			const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+			if (uuidRegex.test(parentCommentId)) {
+				// Verify the parent comment exists in Supabase
+				const { data: parentComment, error: parentError } = await authenticatedSupabase
+					.from('comments')
+					.select('id')
+					.eq('id', parentCommentId)
+					.single();
+
+				if (parentError || !parentComment) {
+					return res.status(400).json({ 
+						error: 'Parent comment not found. You can only reply to comments posted on this site.' 
+					});
+				}
+				validParentCommentId = parentCommentId;
+			} else {
+				// Not a valid UUID - likely a Hashnode comment ID
+				return res.status(400).json({ 
+					error: 'Cannot reply to this comment. You can only reply to comments posted on this site.' 
+				});
+			}
+		}
+
 		// Save comment to Supabase first using authenticated client
 		// The access token in the headers allows RLS policies to identify the user
 		const { data: comment, error: dbError } = await authenticatedSupabase
@@ -83,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 				user_id: user.id,
 				content: content,
 				content_markdown: contentMarkdown,
-				parent_comment_id: parentCommentId || null,
+				parent_comment_id: validParentCommentId,
 				synced_to_hashnode: false,
 			})
 			.select()
