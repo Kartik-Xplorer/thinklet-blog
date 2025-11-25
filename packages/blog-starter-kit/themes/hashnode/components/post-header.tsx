@@ -43,6 +43,8 @@ const PublicationSubscribeStandOut = dynamic(() => import('./publication-subscri
 	ssr: false,
 });
 const RecommendedPosts = dynamic(() => import('./recommended-posts'), { ssr: false });
+const ReadingProgress = dynamic(() => import('./reading-progress'), { ssr: false });
+const CodeBlockManager = dynamic(() => import('./code-block-manager'), { ssr: false });
 
 export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	const postContentEle = useRef<HTMLDivElement>(null);
@@ -66,10 +68,10 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	});
 
 	const shareText = `${post.title}\r\n{ by ${post.author.socialMediaLinks?.twitter
-			? `@${post.author.socialMediaLinks?.twitter
-				.substring(post.author.socialMediaLinks?.twitter.lastIndexOf('/') + 1)
-				.replace('@', '')}`
-			: post.author.name
+		? `@${post.author.socialMediaLinks?.twitter
+			.substring(post.author.socialMediaLinks?.twitter.lastIndexOf('/') + 1)
+			.replace('@', '')}`
+		: post.author.name
 		} } from @hashnode`;
 
 	const handleOpenComments = () => {
@@ -117,6 +119,8 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	const authorsArray = [post.author, ...(post.coAuthors || [])];
 	return (
 		<Fragment>
+			<ReadingProgress />
+			<CodeBlockManager />
 			<div className="blog-article-page container relative mx-auto grid grid-cols-8">
 				<div className="col-span-full lg:col-span-6 lg:col-start-2">
 					{/* Breadcrumbs */}
@@ -283,7 +287,11 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 			<div className="blog-content-wrapper article-main-wrapper container relative z-30 mx-auto grid grid-flow-row grid-cols-8 xl:gap-6 2xl:grid-cols-10">
 				<section className="blog-content-main z-20 col-span-8 mb-10 px-4 md:z-10 lg:col-span-6 lg:col-start-2 lg:px-0 xl:col-span-6 xl:col-start-2 2xl:col-span-6 2xl:col-start-3">
 					<div className="relative">
-						{post.features?.tableOfContents?.isEnabled && post.features?.tableOfContents?.items?.length > 0 && <TocRenderDesign list={toc} />}
+						{post.features?.tableOfContents?.isEnabled && post.features?.tableOfContents?.items?.length > 0 && (
+							<div className="xl:hidden">
+								<TocRenderDesign list={toc} />
+							</div>
+						)}
 
 						{/* {isPublicationPost && renderPinnedWidgets(props.widgets, 'top')} */}
 
@@ -332,6 +340,14 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 						<AboutAuthor />
 					</div>
 				</section>
+
+				{post.features?.tableOfContents?.isEnabled && post.features?.tableOfContents?.items?.length > 0 && (
+					<div className="hidden xl:col-span-2 xl:col-start-8 xl:block 2xl:col-span-2 2xl:col-start-9">
+						<div className="sticky top-24">
+							<TocRenderDesign list={toc} />
+						</div>
+					</div>
+				)}
 			</div>
 
 			<RecommendedPosts post={post} recommendedPosts={recommendedPosts} />

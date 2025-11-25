@@ -44,6 +44,7 @@ class ProgressiveImage extends React.Component<{
     const resizedImage = resizeImage(src, resize);
 
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         data-sizes="auto"
         loading="lazy"

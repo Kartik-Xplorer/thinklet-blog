@@ -59,6 +59,7 @@ export function UserAvatarDropdown() {
 					)}
 					aria-label="User menu"
 				>
+					{/* eslint-disable-next-line @next/next/no-img-element */}
 					<img
 						src={displayAvatar}
 						alt={user.user_metadata?.name || user.email?.split('@')[0] || 'User'}

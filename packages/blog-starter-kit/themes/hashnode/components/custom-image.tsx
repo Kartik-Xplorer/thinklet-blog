@@ -43,6 +43,7 @@ function CustomImage(props: Props) {
 
   if (isGif || !isHashnodeCDNImage) {
     // restOfTheProps will contain all props excluding the next/image props
+    // eslint-disable-next-line @next/next/no-img-element
     return <img {...restOfTheProps} alt={alt} src={src || originalSrc} />;
   }
 
