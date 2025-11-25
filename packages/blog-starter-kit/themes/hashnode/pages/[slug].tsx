@@ -236,6 +236,8 @@ export const getStaticProps: GetStaticProps<Props, Params> = async ({ params }) 
 				first: 3,
 			});
 			recommendedPosts = recommendedPostsData.publication?.posts?.edges ?? [];
+			// Filter out the current post
+			recommendedPosts = recommendedPosts.filter((edge) => edge.node.id !== postData.publication?.post?.id);
 		} catch (error) {
 			console.warn('Failed to fetch recommended posts:', error);
 		}
