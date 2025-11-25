@@ -24,6 +24,24 @@ const CodeBlockManager = () => {
                 }, 2000);
             });
 
+            // Add language label
+            const codeElement = block.querySelector('code');
+            let language = '';
+            if (codeElement) {
+                codeElement.classList.forEach((cls) => {
+                    if (cls.startsWith('language-')) {
+                        language = cls.replace('language-', '');
+                    }
+                });
+            }
+
+            if (language) {
+                const langLabel = document.createElement('span');
+                langLabel.className = 'absolute top-2 right-14 rounded px-2 py-1 text-xs font-bold text-slate-400 uppercase opacity-0 transition-opacity group-hover:opacity-100 select-none';
+                langLabel.innerText = language;
+                block.appendChild(langLabel);
+            }
+
             block.appendChild(button);
         });
     }, []);

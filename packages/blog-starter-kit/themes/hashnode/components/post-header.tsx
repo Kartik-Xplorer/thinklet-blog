@@ -122,7 +122,7 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	const authorsArray = [post.author, ...(post.coAuthors || [])];
 	return (
 		<Fragment>
-			<ReadingProgress />
+			<ReadingProgress readTimeInMinutes={post.readTimeInMinutes} />
 			<CodeBlockManager />
 			<HighlightShare />
 			<ReadNextSlideIn recommendedPosts={recommendedPosts} />
