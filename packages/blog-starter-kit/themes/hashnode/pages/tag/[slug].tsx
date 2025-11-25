@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { twJoin } from 'tailwind-merge';
 import { useState } from 'react';
 import { useQuery } from 'urql';
@@ -72,14 +73,14 @@ export default function Post({ publication, posts, tag, slug, currentMenuId }: P
 							</div>
 							{tag && (
 								<div className="flex w-full flex-col items-start xl:w-auto xl:items-end xl:text-right">
-									<a
+									<Link
 										className="mb-2 flex flex-row items-center whitespace-nowrap rounded-lg border bg-white px-4 py-2 font-medium text-blue-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
 										href="/newsletter"
 										aria-label="Subscribe to newsletter"
 									>
 										<span>Subscribe to Newsletter</span>
 										<ExternalLinkSVG className="ml-1 h-4 w-4 fill-current" />
-									</a>
+									</Link>
 									<p className="text-sm text-slate-700 dark:text-slate-400">Get the latest updates</p>
 								</div>
 							)}
