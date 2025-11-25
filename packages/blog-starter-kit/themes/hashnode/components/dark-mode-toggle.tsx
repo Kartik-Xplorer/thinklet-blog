@@ -17,7 +17,7 @@ export function DarkModeToggle() {
 	const toggleTheme = () => {
 		const html = document.documentElement;
 		const newIsDark = !html.classList.contains('dark');
-		
+
 		if (newIsDark) {
 			html.classList.add('dark');
 			setIsDark(true);
@@ -57,9 +57,9 @@ export function DarkModeToggle() {
 			aria-label="Toggle dark mode"
 		>
 			{isDark ? (
-				<SunSVG className="h-4 w-4 stroke-current" />
+				<SunSVG className="h-4 w-4 stroke-current transition-transform duration-500 rotate-0" />
 			) : (
-				<MoonSVG className="h-4 w-4 stroke-current" />
+				<MoonSVG className="h-4 w-4 stroke-current transition-transform duration-500 rotate-0" />
 			)}
 		</button>
 	);

@@ -45,6 +45,9 @@ const PublicationSubscribeStandOut = dynamic(() => import('./publication-subscri
 const RecommendedPosts = dynamic(() => import('./recommended-posts'), { ssr: false });
 const ReadingProgress = dynamic(() => import('./reading-progress'), { ssr: false });
 const CodeBlockManager = dynamic(() => import('./code-block-manager'), { ssr: false });
+const BookmarkButton = dynamic(() => import('./bookmark-button'), { ssr: false });
+const HighlightShare = dynamic(() => import('./highlight-share'), { ssr: false });
+const ReadNextSlideIn = dynamic(() => import('./read-next-slide-in'), { ssr: false });
 
 export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	const postContentEle = useRef<HTMLDivElement>(null);
@@ -121,6 +124,8 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 		<Fragment>
 			<ReadingProgress />
 			<CodeBlockManager />
+			<HighlightShare />
+			<ReadNextSlideIn recommendedPosts={recommendedPosts} />
 			<div className="blog-article-page container relative mx-auto grid grid-cols-8">
 				<div className="col-span-full lg:col-span-6 lg:col-start-2">
 					{/* Breadcrumbs */}
@@ -256,6 +261,9 @@ export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 									</p>
 								</>
 							)}
+							<div className="ml-4">
+								<BookmarkButton post={post} />
+							</div>
 						</div>
 					</div>
 					{post.coverImage?.url && post.preferences.stickCoverToBottom && (
