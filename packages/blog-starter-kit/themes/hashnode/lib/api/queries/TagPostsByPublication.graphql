@@ -11,6 +11,9 @@ query TagPostsByPublication(
       edges {
         node {
           ...Post
+          comments(first: 0) {
+            totalDocuments
+          }
         }
       }
     }

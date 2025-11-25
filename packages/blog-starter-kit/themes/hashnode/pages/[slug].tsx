@@ -26,6 +26,7 @@ import {
 	SinglePostByPublicationDocument,
 	SlugPostsByPublicationDocument,
 	StaticPageFragment,
+	TagPostsByPublicationDocument,
 } from '../generated/graphql';
 
 type PostProps = {
@@ -33,6 +34,7 @@ type PostProps = {
 	post: PostFullFragment;
 	publication: PublicationFragment;
 	morePosts: MorePostsEdgeFragment[];
+	recommendedPosts: MorePostsEdgeFragment[];
 };
 
 type PageProps = {
@@ -43,7 +45,7 @@ type PageProps = {
 
 type Props = PostProps | PageProps;
 
-const Post = ({ publication, post, morePosts }: PostProps) => {
+const Post = ({ publication, post, morePosts, recommendedPosts }: PostProps) => {
 	const highlightJsMonokaiTheme =
 		'.hljs{display:block;overflow-x:auto;padding:.5em;background:#23241f}.hljs,.hljs-subst,.hljs-tag{color:#f8f8f2}.hljs-emphasis,.hljs-strong{color:#a8a8a2}.hljs-bullet,.hljs-link,.hljs-literal,.hljs-number,.hljs-quote,.hljs-regexp{color:#ae81ff}.hljs-code,.hljs-section,.hljs-selector-class,.hljs-title{color:#a6e22e}.hljs-strong{font-weight:700}.hljs-emphasis{font-style:italic}.hljs-attr,.hljs-keyword,.hljs-name,.hljs-selector-tag{color:#f92672}.hljs-attribute,.hljs-symbol{color:#66d9ef}.hljs-class .hljs-title,.hljs-params{color:#f8f8f2}.hljs-addition,.hljs-built_in,.hljs-builtin-name,.hljs-selector-attr,.hljs-selector-id,.hljs-selector-pseudo,.hljs-string,.hljs-template-variable,.hljs-type,.hljs-variable{color:#e6db74}.hljs-comment,.hljs-deletion,.hljs-meta{color:#75715e}';
 
@@ -83,7 +85,7 @@ const Post = ({ publication, post, morePosts }: PostProps) => {
 				/>
 				<style dangerouslySetInnerHTML={{ __html: highlightJsMonokaiTheme }}></style>
 			</Head>
-			<PostHeader post={post} morePosts={morePosts} />
+			<PostHeader post={post} morePosts={morePosts} recommendedPosts={recommendedPosts} />
 		</>
 	);
 };
@@ -223,12 +225,29 @@ export const getStaticProps: GetStaticProps<Props, Params> = async ({ params }) 
 		request(endpoint, MorePostsByPublicationDocument, { first: 4, host }),
 	]);
 
+	let recommendedPosts: MorePostsEdgeFragment[] = [];
+
+	if (postData.publication?.post?.tags?.length) {
+		const tagSlug = postData.publication.post.tags[0].slug;
+		try {
+			const recommendedPostsData = await request(endpoint, TagPostsByPublicationDocument, {
+				host,
+				tagSlug,
+				first: 3,
+			});
+			recommendedPosts = recommendedPostsData.publication?.posts?.edges ?? [];
+		} catch (error) {
+			console.warn('Failed to fetch recommended posts:', error);
+		}
+	}
+
 	if (postData.publication?.post) {
 		return {
 			props: {
 				type: 'post',
 				post: postData.publication.post,
 				morePosts: morePostsData.publication?.posts.edges ?? [],
+				recommendedPosts,
 				publication: postData.publication,
 			},
 			revalidate: 1,

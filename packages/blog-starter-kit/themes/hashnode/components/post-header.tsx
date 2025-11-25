@@ -33,6 +33,7 @@ moment.extend(localizedFormat);
 type Props = {
 	post: PostFullFragment;
 	morePosts: MorePostsEdgeFragment[];
+	recommendedPosts: MorePostsEdgeFragment[];
 };
 
 const PostFloatingMenu = dynamic(() => import('./post-floating-bar'), { ssr: false });
@@ -41,8 +42,9 @@ const PostCommentsSidebar = dynamic(() => import('./post-comments-sidebar'), { s
 const PublicationSubscribeStandOut = dynamic(() => import('./publication-subscribe-standout'), {
 	ssr: false,
 });
+const RecommendedPosts = dynamic(() => import('./recommended-posts'), { ssr: false });
 
-export const PostHeader = ({ post, morePosts }: Props) => {
+export const PostHeader = ({ post, morePosts, recommendedPosts }: Props) => {
 	const postContentEle = useRef<HTMLDivElement>(null);
 	const [selectedFilter, setSelectedFilter] = useState('totalReactions');
 	const toc = post.features?.tableOfContents?.isEnabled
@@ -63,13 +65,12 @@ export const PostHeader = ({ post, morePosts }: Props) => {
 		};
 	});
 
-	const shareText = `${post.title}\r\n{ by ${
-		post.author.socialMediaLinks?.twitter
+	const shareText = `${post.title}\r\n{ by ${post.author.socialMediaLinks?.twitter
 			? `@${post.author.socialMediaLinks?.twitter
-					.substring(post.author.socialMediaLinks?.twitter.lastIndexOf('/') + 1)
-					.replace('@', '')}`
+				.substring(post.author.socialMediaLinks?.twitter.lastIndexOf('/') + 1)
+				.replace('@', '')}`
 			: post.author.name
-	} } from @hashnode`;
+		} } from @hashnode`;
 
 	const handleOpenComments = () => {
 		setShowCommentsSheet(true);
@@ -118,6 +119,23 @@ export const PostHeader = ({ post, morePosts }: Props) => {
 		<Fragment>
 			<div className="blog-article-page container relative mx-auto grid grid-cols-8">
 				<div className="col-span-full lg:col-span-6 lg:col-start-2">
+					{/* Breadcrumbs */}
+					<div className="mb-4 text-sm text-slate-500 dark:text-slate-400">
+						<Link href="/" className="hover:underline">
+							Home
+						</Link>
+						{' > '}
+						{post.tags && post.tags.length > 0 && (
+							<>
+								<Link href={`/tag/${post.tags[0].slug}`} className="hover:underline">
+									{post.tags[0].name}
+								</Link>
+								{' > '}
+							</>
+						)}
+						<span className="font-medium text-slate-700 dark:text-slate-300">{post.title}</span>
+					</div>
+
 					{/* Top cover */}
 					{post.coverImage?.url && !post.preferences.stickCoverToBottom && (
 						<div className="relative">
@@ -315,6 +333,9 @@ export const PostHeader = ({ post, morePosts }: Props) => {
 					</div>
 				</section>
 			</div>
+
+			<RecommendedPosts post={post} recommendedPosts={recommendedPosts} />
+
 			{/* More posts from current post's author/publication rendered here */}
 			{/* TODO: Below breaking on failed nw request */}
 			{!post.series && <OtherPostsOfAccount post={post} morePosts={top3FilteredPosts} />}
